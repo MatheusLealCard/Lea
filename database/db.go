@@ -33,7 +33,15 @@ func Connect() {
 	}
 	fmt.Println("Banco conectado")
 
-	err = DB.AutoMigrate(&entities.User{}, &entities.Post{}, &entities.Follower{}, &entities.Role{})
+	err = DB.AutoMigrate(
+		&entities.User{},
+		&entities.Post{},
+		&entities.Follower{},
+		&entities.Role{},
+		&entities.Category{},
+		&entities.Message{},
+	)
+
 	if err != nil {
 		log.Fatalf("Erro migracao: %v", err)
 	}
