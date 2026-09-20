@@ -11,8 +11,9 @@ import (
 
 func main() {
 	database.Connect()
+	database.ConnectRedis()
 
-	//ROLES
+	//CRIANDO ROLES
 	user_role := entities.Role{
 		RoleName: "User",
 	}
@@ -48,11 +49,20 @@ func main() {
 		Email: user2.Email,
 	})
 
+	//CRIANDO CATEGORIAS
+	matematica_category := entities.Category{
+		CategoryName: "matematica",
+	}
+	database.DB.FirstOrCreate(&matematica_category, entities.Category{
+		CategoryName: matematica_category.CategoryName,
+	})
+
 	//CRIANDO POSTS
 	post := entities.Post{
-		Title:   "Primeiro post",
-		Content: "Testando 1234",
-		UserID:  1,
+		Title:      "Primeiro post",
+		Content:    "Testando 1234",
+		CategoryID: 1,
+		UserID:     1,
 	}
 	database.DB.FirstOrCreate(&post, entities.Post{
 		Title: post.Title,
@@ -68,16 +78,42 @@ func main() {
 		FolowerID: user2.ID,
 	})
 
+	//CRIANDO MENSAGEM
+	mensagem1 := entities.Message{
+		SenderID:   1,
+		RecieverID: 2,
+		Content:    "Eae fdp",
+	}
+	database.DB.Create(&mensagem1)
+
+	mensagem2 := entities.Message{
+		SenderID:   2,
+		RecieverID: 1,
+		Content:    "Fala arrombado",
+	}
+	database.DB.Create(&mensagem2)
+
 	app := fiber.New()
 
+	//USERS ROTAS
 	app.Get("/getUsers", handlers.GetUsers)
 	app.Post("/createUsers", handlers.CreateUser)
 
+	//POSTS ROTAS
 	app.Get("/getPosts", handlers.GetPosts)
 
+	//FOLOWERS ROTAS
 	app.Get("/users/:id/followers", handlers.GetUserFolowers)
 
+	//ROLES ROTAS
 	app.Get("/getRoles", handlers.GetRoles)
+
+	//USERS ROTAS
+	app.Get("getCategories", handlers.GetCategories)
+
+	//MENSAGEMS ROTAS
+	app.Post("sendMessage", handlers.CreateMessage)
+	app.Get("/messages/:user1/:user2", handlers.GetChatBetweenUsers)
 
 	log.Println("Server running")
 	log.Fatal(app.Listen(":3000"))
