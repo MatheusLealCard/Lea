@@ -108,12 +108,12 @@ func main() {
 	//ROLES ROTAS
 	app.Get("/getRoles", handlers.GetRoles)
 
-	//USERS ROTAS
+	//CATEGORIAS ROTAS
 	app.Get("getCategories", handlers.GetCategories)
 
 	//MENSAGEMS ROTAS
 	app.Post("sendMessage", handlers.CreateMessage)
-	app.Get("/messages/:user1/:user2", handlers.GetChatBetweenUsers)
+	app.Get("/getChatMessages/:user1/:user2", handlers.GetChatBetweenUsers)
 
 	log.Println("Server running")
 	log.Fatal(app.Listen(":3000"))

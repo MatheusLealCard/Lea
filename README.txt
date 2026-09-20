@@ -24,3 +24,35 @@ Quando tu terminar de fazer o que tu tiver fazendo ou quiser mandar pro git tu f
     4 - git push origin nome-que-tu-criou-no-checkout
 
     (Se ja tiver criado a sua brach comeca do passo 2)
+
+ROTAS:
+    Users:
+        getUsers:
+            lista todos os usuarios 
+        
+        createUsers:
+            cria usuario
+    
+    Posts:
+        getPosts:
+            lista todos os posts
+
+    Folowers:
+        users/id/folowers:
+            pega os folowers de um id
+        
+    Roles:
+        getRoles:
+            lista todas as roles
+        
+    Categories:
+        getCategories:
+            lista todas categorias
+
+    Messages:
+        sendMessage:
+            manda mensagem de um id pra outro
+        
+        getCharMessages/user1/user2:
+            pega mensagem enviada de um id pro outro (chat)
+            
