@@ -4,12 +4,16 @@ import (
 	"lea/database"
 	"lea/entities"
 	"lea/handlers"
+	"lea/middlewares"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	godotenv.Load()
 	database.Connect()
 	database.ConnectRedis()
 
@@ -94,10 +98,15 @@ func main() {
 	database.DB.Create(&mensagem2)
 
 	app := fiber.New()
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "*",
+		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
+	}))
 
 	//USERS ROTAS
 	app.Get("/getUsers", handlers.GetUsers)
 	app.Post("/createUsers", handlers.CreateUser)
+	app.Post("/login", handlers.Login)
 
 	//POSTS ROTAS
 	app.Get("/getPosts", handlers.GetPosts)
@@ -111,9 +120,16 @@ func main() {
 	//CATEGORIAS ROTAS
 	app.Get("getCategories", handlers.GetCategories)
 
+	//app.Post("/sendMessage", handlers.CreateMessage)
+
+	//ROTAS PROTEGIDAS
+	api := app.Group("/api", middlewares.Protected())
+
+	//ROTA PROTEGIDA MENSAGEM
+	api.Post("/sendMessage", handlers.CreateMessage)
+
 	//MENSAGEMS ROTAS
-	app.Post("sendMessage", handlers.CreateMessage)
-	app.Get("/getChatMessages/:user1/:user2", handlers.GetChatBetweenUsers)
+	api.Get("/getChatMessages/:user1/:user2", handlers.GetChatBetweenUsers)
 
 	log.Println("Server running")
 	log.Fatal(app.Listen(":3000"))

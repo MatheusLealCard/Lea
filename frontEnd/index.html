@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Go - Auth</title>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f4f4f9; margin: 0; }
+        .card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 320px; }
+        .tabs { display: flex; margin-bottom: 20px; border-bottom: 2px solid #eee; }
+        .tab { flex: 1; padding: 10px; text-align: center; cursor: pointer; font-weight: bold; color: #777; }
+        .tab.active { color: #007bff; border-bottom: 2px solid #007bff; margin-bottom: -2px; }
+        input { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        button:hover { background: #0056b3; }
+        .hidden { display: none; }
+        #mensagem { margin-top: 15px; font-size: 14px; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="tabs">
+            <div id="tabLogin" class="tab active" onclick="switchTab('login')">Entrar</div>
+            <div id="tabRegister" class="tab" onclick="switchTab('register')">Cadastrar</div>
+        </div>
+
+        <!-- Formulário de Login -->
+        <form id="loginForm">
+            <input type="email" id="loginEmail" placeholder="E-mail" required>
+            <input type="password" id="loginPassword" placeholder="Senha" required>
+            <button type="submit">Entrar</button>
+        </form>
+
+        <!-- Formulário de Cadastro -->
+        <form id="registerForm" class="hidden">
+            <input type="text" id="regName" placeholder="Nome" required>
+            <input type="email" id="regEmail" placeholder="E-mail" required>
+            <input type="password" id="regPassword" placeholder="Senha" required>
+            <button type="submit">Cadastrar</button>
+        </form>
+
+        <div id="mensagem"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000';
+
+        function switchTab(tab) {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const tabLogin = document.getElementById('tabLogin');
+            const tabRegister = document.getElementById('tabRegister');
+            document.getElementById('mensagem').innerText = '';
+
+            if (tab === 'login') {
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                tabLogin.classList.add('active');
+                tabRegister.classList.remove('active');
+            } else {
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+                tabRegister.classList.add('active');
+                tabLogin.classList.remove('active');
+            }
+        }
+
+        // Lógica de Login
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const divMensagem = document.getElementById('mensagem');
+
+            try {
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    divMensagem.style.color = 'green';
+                    divMensagem.innerText = 'Login efetuado com sucesso!';
+                    localStorage.setItem('token', data.token);
+                    setTimeout(() => {
+                        window.location.href = "chat.html";
+                    }, 300);
+                } else {
+                    divMensagem.style.color = 'red';
+                    divMensagem.innerText = data.error || 'Erro ao fazer login';
+                }
+            } catch (err) {
+                divMensagem.style.color = 'red';
+                divMensagem.innerText = 'Erro de conexão com o servidor';
+            }
+        });
+
+        // Lógica de Cadastro (Ajuste a rota se usares "/register" ou "/users")
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const divMensagem = document.getElementById('mensagem');
+
+            try {
+                const response = await fetch(`${API_URL}/createUsers`, { // Altera para /register se a tua rota for essa
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    divMensagem.style.color = 'green';
+                    divMensagem.innerText = 'Conta criada com sucesso! Faça login.';
+                    document.getElementById('registerForm').reset();
+                    setTimeout(() => switchTab('login'), 1000);
+                } else {
+                    divMensagem.style.color = 'red';
+                    divMensagem.innerText = data.error || 'Erro ao criar conta';
+                }
+            } catch (err) {
+                divMensagem.style.color = 'red';
+                divMensagem.innerText = 'Erro de conexão com o servidor';
+            }
+        });
+    </script>
+
+</body>
+</html>

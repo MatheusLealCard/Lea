@@ -53,6 +53,6 @@ ROTAS:
         sendMessage:
             manda mensagem de um id pra outro
         
-        getCharMessages/user1/user2:
+        getChatMessages/user1/user2:
             pega mensagem enviada de um id pro outro (chat)
             

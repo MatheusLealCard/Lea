@@ -45,12 +45,18 @@ func GetChatBetweenUsers(c *fiber.Ctx) error {
 }
 
 type CreateMessageInput struct {
-	SenderID   uint   `json:"sender_id"`
 	RecieverID uint   `json:"reciever_id"`
 	Content    string `json:"content"`
 }
 
 func CreateMessage(c *fiber.Ctx) error {
+	userID, ok := c.Locals("user_id").(uint)
+	if !ok {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Não autorizado",
+		})
+	}
+
 	var input CreateMessageInput
 
 	if err := c.BodyParser(&input); err != nil {
@@ -60,7 +66,7 @@ func CreateMessage(c *fiber.Ctx) error {
 	}
 
 	message := entities.Message{
-		SenderID:   input.SenderID,
+		SenderID:   userID,
 		RecieverID: input.RecieverID,
 		Content:    input.Content,
 	}
@@ -74,7 +80,8 @@ func CreateMessage(c *fiber.Ctx) error {
 	messageJSON, err := json.Marshal(message)
 	if err == nil {
 		ctx := context.Background()
-		cacheKey := fmt.Sprintf("chat:last:%d:%d", input.SenderID, input.RecieverID)
+
+		cacheKey := fmt.Sprintf("chat:last:%d:%d", userID, input.RecieverID)
 		database.Rdb.Set(ctx, cacheKey, messageJSON, 36*time.Hour)
 		database.Rdb.Publish(ctx, "chat_channel", messageJSON)
 	}
