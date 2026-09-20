@@ -1,0 +1,18 @@
+1 - Baixa o docker desktop "https://docs.docker.com/desktop/setup/install/windows-install/"
+2 - Baixa o go "https://go.dev/doc/install"
+3 - No terminal usa o comando "go mod tidy"
+4 - entra no terminal na pasta chamada "docker" e usa o comando "docker compose up -d"
+5 - na pasta raiz abre o terminal e roda go run main.go
+
+Pastas:
+    database:
+        onde fica as config do banco, se adicionar algo na entities 
+        tem que adicionar aqui, lá no "DB.AutoMigrate"
+
+    entities: 
+        onde fica as tables do banco
+
+    handlers:
+        onde ficam as funcoes (get, delete, create etc)
+
+Ta sem o .env vou te mandar pra tu criar na raiz da pasta, cria um arquivo chamado ".env".

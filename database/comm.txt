@@ -1,0 +1,5 @@
+//apagar os dados do container
+docker compose down -v 
+
+//subir docker
+docker compose up -d
