@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Go - Feed</title>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; height: 100vh; margin: 0; background: #f4f4f9; }
+        .sidebar { width: 300px; background: white; border-right: 1px solid #ddd; display: flex; flex-direction: column; }
+        .sidebar h3 { padding: 20px; margin: 0; border-bottom: 1px solid #eee; background: #007bff; color: white; }
+        .user-list { overflow-y: auto; flex: 1; }
+        .user-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.2s; }
+        .user-item:hover, .user-item.active { background: #f1f1f1; }
+        
+        .chat-area { flex: 1; display: flex; flex-direction: column; background: #fff; }
+        .chat-header { padding: 20px; border-bottom: 1px solid #ddd; background: #fafafa; font-weight: bold; }
+        .messages-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .message { max-width: 60%; padding: 10px; border-radius: 8px; font-size: 14px; }
+        .message.sent { background: #dcf8c6; align-self: flex-end; }
+        .message.received { background: #e5e5ea; align-self: flex-start; }
+        
+        .chat-input { display: flex; padding: 15px; border-top: 1px solid #ddd; background: #fafafa; }
+        .chat-input input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; outline: none; }
+        .chat-input button { padding: 10px 20px; margin-left: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .chat-input button:hover { background: #0056b3; }
+        .no-chat { display: flex; justify-content: center; align-items: center; flex: 1; color: #888; }
+    </style>
+</head>
+<body>
+
+    <!-- Barra lateral com a lista de utilizadores -->
+    <div class="sidebar">
+        <h3>Conversas</h3>
+        <div id="userList" class="user-list">
+            <!-- Os utilizadores vão aparecer aqui via JS -->
+        </div>
+    </div>
+
+    <!-- Área principal do chat -->
+    <div class="chat-area">
+        <div id="chatHeader" class="chat-header">Selecione um utilizador para começar a conversar</div>
+        
+        <div id="messagesBox" class="messages-box">
+            <div class="no-chat">Nenhuma conversa selecionada</div>
+        </div>
+
+        <form id="messageForm" class="chat-input hidden">
+            <input type="text" id="messageInput" placeholder="Escreve uma mensagem..." autocomplete="off" required>
+            <button type="submit">Enviar</button>
+        </form>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8080';
+        const token = localStorage.getItem('token');
+        let selectedUserId = null;
+
+        // Se não houver token, manda de volta para o login
+        if (!token) {
+            alert('Por favor, faça login primeiro!');
+            window.location.href = 'index.html';
+        }
+
+        // 1. Buscar a lista de utilizadores para preencher a sidebar
+        async function loadUsers() {
+            try {
+                const response = await fetch(`${API_URL}/users`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const users = await response.json();
+                
+                const userListDiv = document.getElementById('userList');
+                userListDiv.innerHTML = '';
+
+                users.forEach(user => {
+                    const div = document.createElement('div');
+                    div.className = 'user-item';
+                    div.innerText = user.name || user.email;
+                    div.onclick = () => selectUser(user.ID, user.name || user.email, div);
+                    userListDiv.appendChild(div);
+                });
+            } catch (err) {
+                console.error('Erro ao carregar utilizadores:', err);
+            }
+        }
+
+        // 2. Selecionar um utilizador para abrir o chat
+        function selectUser(userId, userName, element) {
+            selectedUserId = userId;
+            document.getElementById('chatHeader').innerText = `Conversando com: ${userName}`;
+            document.getElementById('messageForm').classList.remove('hidden');
+            
+            // Destacar o utilizador ativo na lista
+            document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+
+            // Aqui podes futuramente carregar o histórico de mensagens entre vocês
+            document.getElementById('messagesBox').innerHTML = `<div class="no-chat">Início da conversa com ${userName}</div>`;
+        }
+
+        // 3. Enviar mensagem usando o token JWT
+        document.getElementById('messageForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const content = document.getElementById('messageInput').value;
+
+            if (!selectedUserId || !content.trim()) return;
+
+            try {
+                const response = await fetch(`${API_URL}/api/messages`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` // <-- O crachá JWT vai aqui!
+                    },
+                    body: JSON.stringify({
+                        reciever_id: selectedUserId,
+                        content: content
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Adiciona a mensagem visualmente no feed do chat
+                    const msgBox = document.getElementById('messagesBox');
+                    const msgDiv = document.createElement('div');
+                    msgDiv.className = 'message sent';
+                    msgDiv.innerText = content;
+                    msgBox.appendChild(msgDiv);
+                    
+                    // Limpa o input e faz scroll para baixo
+                    document.getElementById('messageInput').value = '';
+                    msgBox.scrollTop = msgBox.scrollHeight;
+                } else {
+                    alert(data.error || 'Erro ao enviar mensagem');
+                }
+            } catch (err) {
+                console.error('Erro de conexão:', err);
+            }
+        });
+
+        // Inicializa carregando os utilizadores
+        loadUsers();
+    </script>
+</body>
+</html>
