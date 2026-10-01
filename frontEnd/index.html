@@ -26,6 +26,17 @@ main{max-width:900px;margin:16px auto;padding:0 12px}
 .post img{max-width:100%;max-height:360px;border-radius:8px;margin-bottom:8px;display:block}
 #postForm{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
 #postForm textarea{min-height:80px;resize:vertical}
+.stats{display:flex;gap:20px;margin-top:10px}
+.person{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.row{display:flex;gap:12px;align-items:center}
+.avatar{width:44px;height:44px;border-radius:50%;object-fit:cover;background:var(--other);color:var(--mut);display:inline-flex;align-items:center;justify-content:center;font-weight:600;flex:none}
+.avatar.lg{width:72px;height:72px;font-size:28px}
+.avatar.sm{width:24px;height:24px;font-size:12px}
+#groupForm{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+#groupForm textarea{min-height:60px;resize:vertical}
+.group{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:8px}
+#gPostForm{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+#gPostForm textarea{min-height:80px;resize:vertical}
 .post h4{margin:0 0 4px}
 .mut{color:var(--mut);font-size:13px}
 #chatView{display:grid;grid-template-columns:220px 1fr;gap:12px;height:70vh}
@@ -59,6 +70,8 @@ main{max-width:900px;margin:16px auto;padding:0 12px}
     <div class="tabs">
       <button id="tHome" class="on">Home</button>
       <button id="tChat">Chat</button>
+      <button id="tProfile">Perfil</button>
+      <button id="tGroups">Grupos</button>
     </div>
     <div><span id="me" class="mut"></span> <button class="ghost" id="logout">Sair</button></div>
   </header>
@@ -84,6 +97,46 @@ main{max-width:900px;margin:16px auto;padding:0 12px}
           <input id="text" placeholder="Digite uma mensagem..." autocomplete="off">
           <button>Enviar</button>
         </form>
+      </div>
+    </section>
+      <section id="profileView" class="hide">
+      <div id="myProfile" class="card"></div>
+      <label class="mut" style="display:block;margin-top:8px">Trocar foto de perfil
+        <input id="avatarInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+      </label>
+      <h3>Pessoas</h3>
+      <div id="people"></div>
+    </section>
+  <section id="groupsView" class="hide">
+      <div id="groupsList">
+      <form id="groupForm" class="card">
+        <strong>Novo grupo</strong>
+        <input id="gName" placeholder="Nome do grupo" maxlength="100" required>
+        <textarea id="gDesc" placeholder="Descrição (opcional)" maxlength="500"></textarea>
+        <div class="err" id="groupErr"></div>
+        <button>Criar grupo</button>
+      </form>
+      <h3>Grupos</h3>
+      <div id="groups"></div>
+      </div>
+      <div id="groupDetail" class="hide">
+        <button class="ghost" id="gBack">← Voltar</button>
+        <div class="card" style="margin:10px 0">
+          <h3 id="gdName" style="margin:0"></h3>
+          <div id="gdDesc"></div>
+          <div class="mut" id="gdMeta"></div>
+        </div>
+        <form id="gPostForm" class="card">
+          <strong>Novo post no grupo</strong>
+          <input id="gpTitle" placeholder="Título" required>
+          <textarea id="gpContent" placeholder="Conteúdo" required></textarea>
+          <select id="gpCat"></select>
+          <input id="gpPhoto" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+          <div class="err" id="gpErr"></div>
+          <button>Publicar no grupo</button>
+        </form>
+        <div id="gMemberHint" class="mut hide">Entre no grupo pra poder postar.</div>
+        <div id="gPosts"></div>
       </div>
     </section>
   </main>
@@ -143,9 +196,15 @@ function show(tab) {
   $("chatView").classList.toggle("hide", tab !== "chat");
   $("tHome").classList.toggle("on", tab === "home");
   $("tChat").classList.toggle("on", tab === "chat");
+  $("profileView").classList.toggle("hide", tab !== "profile");
+  $("tProfile").classList.toggle("on", tab === "profile");
+  $("groupsView").classList.toggle("hide", tab !== "groups");
+  $("tGroups").classList.toggle("on", tab === "groups");
 }
 $("tHome").onclick = () => show("home");
 $("tChat").onclick = () => show("chat");
+$("tProfile").onclick = () => { show("profile"); loadProfile(); };
+$("tGroups").onclick = () => { show("groups"); loadGroups(); };
 
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -153,7 +212,7 @@ async function loadPosts() {
   try {
     const posts = await req("/getPosts");
     $("posts").innerHTML = posts.length ? posts.map(p =>
-      `<div class="card post">${p.photo_url ? `<img src="${API}${esc(p.photo_url)}" alt="">` : ""}<h4>${esc(p.title)}</h4><div>${esc(p.content)}</div><div class="mut">por ${esc(p.author_name)} · ${esc(p.category_name)}</div></div>`).join("")
+      `<div class="card post">${p.photo_url ? `<img src="${API}${esc(p.photo_url)}" alt="">` : ""}<h4>${esc(p.title)}</h4><div>${esc(p.content)}</div><div class="mut row" style="gap:6px">${av(p.author_avatar_url, p.author_name, "sm")}por ${esc(p.author_name)} · ${esc(p.category_name)}</div></div>`).join("")
       : '<div class="mut">Sem posts</div>';
   } catch (e) { $("posts").textContent = e.message; }
 }
@@ -200,6 +259,118 @@ $("send").onsubmit = async e => {
     await req("/api/sendMessage", { method: "POST", body: JSON.stringify({ reciever_id: other, content }) });
     lastSig = ""; loadChat();
   } catch (err) { alert(err.message); }
+};
+
+// avatar: foto se tiver, senão círculo com a inicial do nome
+function av(url, name, size) {
+  if (url) return `<img class="avatar ${size}" src="${API}${esc(url)}" alt="">`;
+  return `<span class="avatar ${size}">${esc((name || "?").charAt(0).toUpperCase())}</span>`;
+}
+$("avatarInput").onchange = async e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const fd = new FormData();
+  fd.append("photo", f);
+  try {
+    await req("/api/me/avatar", { method: "POST", body: fd });
+    e.target.value = "";
+    loadProfile(); loadPosts();
+  } catch (err) { alert(err.message); }
+};
+
+async function loadProfile() {
+  try {
+    const users = await req("/getUsers");
+    const profiles = await Promise.all(users.map(u => req("/api/users/" + u.ID + "/profile")));
+    const mine = profiles.find(p => p.is_me);
+    $("myProfile").innerHTML = mine
+      ? `<div class="row">${av(mine.avatar_url, mine.name, "lg")}<div><h3 style="margin:0">${esc(mine.name)}</h3><div class="mut">${esc(mine.email)}</div></div></div><div class="stats"><div><b>${mine.followers}</b> seguidores</div><div><b>${mine.following}</b> seguindo</div></div>`
+      : "";
+    $("people").innerHTML = profiles.filter(p => !p.is_me).map(p =>
+      `<div class="card person"><div class="row">${av(p.avatar_url, p.name, "")}<div><b>${esc(p.name)}</b><div class="mut">${p.followers} seguidores · ${p.following} seguindo</div></div></div><button class="${p.is_following ? "ghost" : ""}" data-id="${p.id}" data-f="${p.is_following}">${p.is_following ? "Seguindo" : "Seguir"}</button></div>`).join("")
+      || '<div class="mut">Nenhum outro usuário ainda.</div>';
+    document.querySelectorAll("#people button").forEach(b => b.onclick = () => toggleFollow(b.dataset.id, b.dataset.f === "true"));
+  } catch (e) { $("myProfile").textContent = e.message; }
+}
+async function toggleFollow(id, following) {
+  try {
+    await req("/api/users/" + id + "/follow", { method: following ? "DELETE" : "POST" });
+    loadProfile();
+  } catch (e) { alert(e.message); }
+}
+
+async function loadGroups() {
+  try {
+    const gs = await req("/api/groups");
+    groupsCache = Object.fromEntries(gs.map(g => [g.id, g]));
+    $("groups").innerHTML = gs.map(g =>
+      `<div class="card group"><div><b>${esc(g.name)}</b>${g.is_owner ? ' <span class="mut">(dono)</span>' : ""}<div>${esc(g.description)}</div><div class="mut">${g.members} membros · criado por ${esc(g.owner_name)}</div></div><div class="row"><button class="ghost" data-open="${g.id}">Abrir</button>${g.is_owner ? "" : `<button class="${g.is_member ? "ghost" : ""}" data-id="${g.id}" data-m="${g.is_member}">${g.is_member ? "Sair" : "Entrar"}</button>`}</div></div>`).join("")
+      || '<div class="mut">Nenhum grupo ainda. Cria o primeiro!</div>';
+    document.querySelectorAll("#groups button[data-m]").forEach(b => b.onclick = () => toggleGroup(b.dataset.id, b.dataset.m === "true"));
+    document.querySelectorAll("#groups button[data-open]").forEach(b => b.onclick = () => openGroup(Number(b.dataset.open)));
+  } catch (e) { $("groups").textContent = e.message; }
+}
+async function toggleGroup(id, member) {
+  try {
+    await req("/api/groups/" + id + "/join", { method: member ? "DELETE" : "POST" });
+    loadGroups();
+  } catch (e) { alert(e.message); }
+}
+$("groupForm").onsubmit = async e => {
+  e.preventDefault();
+  $("groupErr").textContent = "";
+  try {
+    await req("/api/groups", { method: "POST", body: JSON.stringify({ name: $("gName").value, description: $("gDesc").value }) });
+    $("groupForm").reset();
+    loadGroups();
+  } catch (err) { $("groupErr").textContent = err.message; }
+};
+
+let groupsCache = {}, currentGroup = null;
+
+function postCard(p) {
+  return `<div class="card post">${p.photo_url ? `<img src="${API}${esc(p.photo_url)}" alt="">` : ""}<h4>${esc(p.title)}</h4><div>${esc(p.content)}</div><div class="mut row" style="gap:6px">${av(p.author_avatar_url, p.author_name, "sm")}por ${esc(p.author_name)} · ${esc(p.category_name)}</div></div>`;
+}
+function openGroup(id) {
+  currentGroup = groupsCache[id];
+  if (!currentGroup) return;
+  $("groupsList").classList.add("hide");
+  $("groupDetail").classList.remove("hide");
+  $("gdName").textContent = currentGroup.name;
+  $("gdDesc").textContent = currentGroup.description;
+  $("gdMeta").textContent = currentGroup.members + " membros · criado por " + currentGroup.owner_name;
+  $("gPostForm").classList.toggle("hide", !currentGroup.is_member);
+  $("gMemberHint").classList.toggle("hide", currentGroup.is_member);
+  $("gpCat").innerHTML = $("pCat").innerHTML;
+  loadGroupPosts();
+}
+async function loadGroupPosts() {
+  try {
+    const posts = await req("/api/groups/" + currentGroup.id + "/posts");
+    $("gPosts").innerHTML = posts.length ? posts.map(postCard).join("") : '<div class="mut">Nenhum post ainda neste grupo.</div>';
+  } catch (e) { $("gPosts").textContent = e.message; }
+}
+$("gBack").onclick = () => {
+  $("groupDetail").classList.add("hide");
+  $("groupsList").classList.remove("hide");
+  currentGroup = null;
+  loadGroups();
+};
+$("gPostForm").onsubmit = async e => {
+  e.preventDefault();
+  $("gpErr").textContent = "";
+  const fd = new FormData();
+  fd.append("title", $("gpTitle").value);
+  fd.append("content", $("gpContent").value);
+  fd.append("category_id", $("gpCat").value);
+  fd.append("group_id", currentGroup.id);
+  const f = $("gpPhoto").files[0];
+  if (f) fd.append("photo", f);
+  try {
+    await req("/api/posts", { method: "POST", body: fd });
+    $("gPostForm").reset();
+    loadGroupPosts();
+  } catch (err) { $("gpErr").textContent = err.message; }
 };
 
 async function loadCategories() {
