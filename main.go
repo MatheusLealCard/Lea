@@ -6,130 +6,92 @@ import (
 	"lea/handlers"
 	"lea/middlewares"
 	"log"
+	"os"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/joho/godotenv"
+	"golang.org/x/crypto/bcrypt"
 )
+
+func seedUser(name, email, password string, roleID uint) entities.User {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var u entities.User
+	if err := database.DB.Where("email = ?", email).First(&u).Error; err != nil {
+		u = entities.User{Name: name, Email: email, Password: string(hash), RoleID: roleID}
+		if err := database.DB.Create(&u).Error; err != nil {
+			log.Fatal(err)
+		}
+		log.Println("seed: criado", email)
+		return u
+	}
+
+	err = database.DB.Model(&u).Updates(map[string]interface{}{
+		"name":     name,
+		"password": string(hash),
+		"role_id":  roleID,
+	}).Error
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("seed: atualizado", email)
+	return u
+}
 
 func main() {
 	godotenv.Load()
 	database.Connect()
 	database.ConnectRedis()
 
-	//CRIANDO ROLES
-	user_role := entities.Role{
-		RoleName: "User",
-	}
-	database.DB.FirstOrCreate(&user_role, entities.Role{
-		RoleName: user_role.RoleName,
-	})
+	// ROLES
+	var userRole, creatorRole, adminRole entities.Role
+	database.DB.Where(entities.Role{RoleName: "User"}).FirstOrCreate(&userRole)
+	database.DB.Where(entities.Role{RoleName: "Creator"}).FirstOrCreate(&creatorRole)
+	database.DB.Where(entities.Role{RoleName: "Admin"}).FirstOrCreate(&adminRole)
 
-	creator_role := entities.Role{
-		RoleName: "Creator",
+	// ADMINS
+	adminPass := os.Getenv("ADMIN_PASSWORD")
+	if adminPass == "" {
+		log.Fatal("defina ADMIN_PASSWORD no .env")
 	}
-	database.DB.FirstOrCreate(&creator_role, entities.Role{
-		RoleName: creator_role.RoleName,
-	})
+	matheus := seedUser("Matheus", "matheus@gmail.com", adminPass, adminRole.ID)
+	marcos := seedUser("Marcos", "marcos@gmail.com", adminPass, adminRole.ID)
 
-	//CRIANDO USERS
-	user := entities.User{
-		Name:     "Carlos",
-		Email:    "carlos@gmail.com",
-		Password: "12345",
-		RoleID:   1,
-	}
-	database.DB.FirstOrCreate(&user, entities.User{
-		Email: user.Email,
-	})
+	// CATEGORIA, POST E FOLLOWER
+	var category entities.Category
+	database.DB.Where(entities.Category{CategoryName: "matematica"}).FirstOrCreate(&category)
 
-	user2 := entities.User{
-		Name:     "Matheus",
-		Email:    "matheus@gmail.com",
-		Password: "mm1234",
-		RoleID:   2,
-	}
-	database.DB.FirstOrCreate(&user2, entities.User{
-		Email: user2.Email,
-	})
+	post := entities.Post{Title: "Primeiro post", Content: "Testando 1234", CategoryID: category.ID, UserID: matheus.ID}
+	database.DB.Where(entities.Post{Title: post.Title}).FirstOrCreate(&post)
 
-	//CRIANDO CATEGORIAS
-	matematica_category := entities.Category{
-		CategoryName: "matematica",
-	}
-	database.DB.FirstOrCreate(&matematica_category, entities.Category{
-		CategoryName: matematica_category.CategoryName,
-	})
+	follower := entities.Follower{UserID: matheus.ID, FolowerID: marcos.ID}
+	database.DB.Where(follower).FirstOrCreate(&follower)
 
-	//CRIANDO POSTS
-	post := entities.Post{
-		Title:      "Primeiro post",
-		Content:    "Testando 1234",
-		CategoryID: 1,
-		UserID:     1,
-	}
-	database.DB.FirstOrCreate(&post, entities.Post{
-		Title: post.Title,
-	})
-
-	//CRIANDO FOLOWERS
-	follower1 := entities.Follower{
-		UserID:    1,
-		FolowerID: 2,
-	}
-	database.DB.FirstOrCreate(&follower1, entities.Follower{
-		UserID:    user.ID,
-		FolowerID: user2.ID,
-	})
-
-	//CRIANDO MENSAGEM
-	mensagem1 := entities.Message{
-		SenderID:   1,
-		RecieverID: 2,
-		Content:    "Eae fdp",
-	}
-	database.DB.Create(&mensagem1)
-
-	mensagem2 := entities.Message{
-		SenderID:   2,
-		RecieverID: 1,
-		Content:    "Fala arrombado",
-	}
-	database.DB.Create(&mensagem2)
-
-	app := fiber.New()
+	app := fiber.New(fiber.Config{BodyLimit: 6 * 1024 * 1024})
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
 	}))
 
-	//USERS ROTAS
+	// públicas
+	app.Static("/uploads", "./uploads")
 	app.Get("/getUsers", handlers.GetUsers)
 	app.Post("/createUsers", handlers.CreateUser)
 	app.Post("/login", handlers.Login)
-
-	//POSTS ROTAS
 	app.Get("/getPosts", handlers.GetPosts)
-
-	//FOLOWERS ROTAS
 	app.Get("/users/:id/followers", handlers.GetUserFolowers)
-
-	//ROLES ROTAS
 	app.Get("/getRoles", handlers.GetRoles)
+	app.Get("/getCategories", handlers.GetCategories)
 
-	//CATEGORIAS ROTAS
-	app.Get("getCategories", handlers.GetCategories)
-
-	//app.Post("/sendMessage", handlers.CreateMessage)
-
-	//ROTAS PROTEGIDAS
+	// protegidas
 	api := app.Group("/api", middlewares.Protected())
-
-	//ROTA PROTEGIDA MENSAGEM
 	api.Post("/sendMessage", handlers.CreateMessage)
-
-	//MENSAGEMS ROTAS
-	api.Get("/getChatMessages/:user1/:user2", handlers.GetChatBetweenUsers)
+	api.Get("/chat/:otherId", handlers.GetChat)
+	api.Post("/posts", handlers.CreatePost)
 
 	log.Println("Server running")
 	log.Fatal(app.Listen(":3000"))

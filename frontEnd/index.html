@@ -1,136 +1,230 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Go - Auth</title>
-    <style>
-        body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f4f4f9; margin: 0; }
-        .card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 320px; }
-        .tabs { display: flex; margin-bottom: 20px; border-bottom: 2px solid #eee; }
-        .tab { flex: 1; padding: 10px; text-align: center; cursor: pointer; font-weight: bold; color: #777; }
-        .tab.active { color: #007bff; border-bottom: 2px solid #007bff; margin-bottom: -2px; }
-        input { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 10px; }
-        button:hover { background: #0056b3; }
-        .hidden { display: none; }
-        #mensagem { margin-top: 15px; font-size: 14px; text-align: center; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lea - Teste</title>
+<style>
+:root{--bg:#f5f6fa;--card:#fff;--tx:#1d2330;--mut:#6b7385;--pri:#4f46e5;--bd:#e3e6ee;--me:#4f46e5;--other:#eceef5}
+@media (prefers-color-scheme:dark){:root{--bg:#12141b;--card:#1b1f2a;--tx:#e8eaf2;--mut:#8b93a7;--bd:#2a3040;--other:#262c3a}}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--tx)}
+.hide{display:none!important}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px}
+input,button,textarea,select{font:inherit;padding:10px 12px;border-radius:8px;border:1px solid var(--bd);background:var(--card);color:var(--tx)}
+button{background:var(--pri);color:#fff;border:0;cursor:pointer}
+button.ghost{background:transparent;color:var(--mut);border:1px solid var(--bd)}
+#auth{max-width:340px;margin:12vh auto;display:flex;flex-direction:column;gap:10px}
+#auth h2{margin:0 0 4px}
+.err{color:#e5484d;font-size:14px;min-height:18px}
+header{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-bottom:1px solid var(--bd);background:var(--card)}
+.tabs{display:flex;gap:8px}
+.tabs button{background:transparent;color:var(--mut)}
+.tabs button.on{background:var(--pri);color:#fff}
+main{max-width:900px;margin:16px auto;padding:0 12px}
+.post{margin-bottom:10px}
+.post img{max-width:100%;max-height:360px;border-radius:8px;margin-bottom:8px;display:block}
+#postForm{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+#postForm textarea{min-height:80px;resize:vertical}
+.post h4{margin:0 0 4px}
+.mut{color:var(--mut);font-size:13px}
+#chatView{display:grid;grid-template-columns:220px 1fr;gap:12px;height:70vh}
+#users{overflow:auto;padding:8px}
+.u{padding:10px;border-radius:8px;cursor:pointer}
+.u:hover,.u.on{background:var(--other)}
+#chatBox{display:flex;flex-direction:column;padding:0;overflow:hidden}
+#chatHead{padding:12px 16px;border-bottom:1px solid var(--bd);font-weight:600}
+#msgs{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:6px}
+.m{max-width:70%;padding:8px 12px;border-radius:14px;background:var(--other);align-self:flex-start;word-break:break-word}
+.m.me{background:var(--me);color:#fff;align-self:flex-end}
+#send{display:flex;gap:8px;padding:10px;border-top:1px solid var(--bd)}
+#send input{flex:1}
+@media(max-width:640px){#chatView{grid-template-columns:1fr;height:auto}#users{max-height:140px}#msgs{height:50vh}}
+</style>
 </head>
 <body>
 
-    <div class="card">
-        <div class="tabs">
-            <div id="tabLogin" class="tab active" onclick="switchTab('login')">Entrar</div>
-            <div id="tabRegister" class="tab" onclick="switchTab('register')">Cadastrar</div>
-        </div>
+<div id="auth" class="card">
+  <h2 id="authTitle">Entrar</h2>
+  <input id="name" placeholder="Nome" class="hide">
+  <input id="email" type="email" placeholder="Email">
+  <input id="pass" type="password" placeholder="Senha">
+  <div class="err" id="authErr"></div>
+  <button id="authBtn">Entrar</button>
+  <button class="ghost" id="toggle">Criar conta</button>
+</div>
 
-        <!-- Formulário de Login -->
-        <form id="loginForm">
-            <input type="email" id="loginEmail" placeholder="E-mail" required>
-            <input type="password" id="loginPassword" placeholder="Senha" required>
-            <button type="submit">Entrar</button>
-        </form>
-
-        <!-- Formulário de Cadastro -->
-        <form id="registerForm" class="hidden">
-            <input type="text" id="regName" placeholder="Nome" required>
-            <input type="email" id="regEmail" placeholder="E-mail" required>
-            <input type="password" id="regPassword" placeholder="Senha" required>
-            <button type="submit">Cadastrar</button>
-        </form>
-
-        <div id="mensagem"></div>
+<div id="app" class="hide">
+  <header>
+    <div class="tabs">
+      <button id="tHome" class="on">Home</button>
+      <button id="tChat">Chat</button>
     </div>
+    <div><span id="me" class="mut"></span> <button class="ghost" id="logout">Sair</button></div>
+  </header>
+  <main>
+    <section id="homeView">
+      <form id="postForm" class="card">
+        <strong>Novo post</strong>
+        <input id="pTitle" placeholder="Título" required>
+        <textarea id="pContent" placeholder="Conteúdo" required></textarea>
+        <select id="pCat"></select>
+        <input id="pPhoto" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+        <div class="err" id="postErr"></div>
+        <button>Publicar</button>
+      </form>
+      <h3>Posts</h3><div id="posts"></div>
+    </section>
+    <section id="chatView" class="hide">
+      <div id="users" class="card"></div>
+      <div id="chatBox" class="card">
+        <div id="chatHead">Escolhe alguém pra conversar</div>
+        <div id="msgs"></div>
+        <form id="send" class="hide">
+          <input id="text" placeholder="Digite uma mensagem..." autocomplete="off">
+          <button>Enviar</button>
+        </form>
+      </div>
+    </section>
+  </main>
+</div>
 
-    <script>
-        const API_URL = 'http://localhost:3000';
+<script>
+const API = "http://localhost:3000";
+const $ = id => document.getElementById(id);
+let token = localStorage.getItem("token");
+let myId = null, other = null, poll = null, isRegister = false;
 
-        function switchTab(tab) {
-            const loginForm = document.getElementById('loginForm');
-            const registerForm = document.getElementById('registerForm');
-            const tabLogin = document.getElementById('tabLogin');
-            const tabRegister = document.getElementById('tabRegister');
-            document.getElementById('mensagem').innerText = '';
+const jwtId = t => { try { return JSON.parse(atob(t.split(".")[1].replace(/-/g,"+").replace(/_/g,"/"))).sub } catch { return null } };
 
-            if (tab === 'login') {
-                loginForm.classList.remove('hidden');
-                registerForm.classList.add('hidden');
-                tabLogin.classList.add('active');
-                tabRegister.classList.remove('active');
-            } else {
-                loginForm.classList.add('hidden');
-                registerForm.classList.remove('hidden');
-                tabRegister.classList.add('active');
-                tabLogin.classList.remove('active');
-            }
-        }
+async function req(path, opts = {}) {
+  const r = await fetch(API + path, {
+    ...opts,
+    headers: { ...(opts.body instanceof FormData ? {} : { "Content-Type": "application/json" }), ...(token ? { Authorization: "Bearer " + token } : {}) }
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || "Erro " + r.status);
+  return data;
+}
 
-        // Lógica de Login
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            const divMensagem = document.getElementById('mensagem');
+/* AUTH */
+$("toggle").onclick = () => {
+  isRegister = !isRegister;
+  $("name").classList.toggle("hide", !isRegister);
+  $("authTitle").textContent = isRegister ? "Criar conta" : "Entrar";
+  $("authBtn").textContent = isRegister ? "Cadastrar" : "Entrar";
+  $("toggle").textContent = isRegister ? "Já tenho conta" : "Criar conta";
+  $("authErr").textContent = "";
+};
+$("authBtn").onclick = async () => {
+  $("authErr").textContent = "";
+  const email = $("email").value, password = $("pass").value;
+  try {
+    if (isRegister) {
+      await req("/createUsers", { method: "POST", body: JSON.stringify({ Name: $("name").value, Email: email, Password: password }) });
+    }
+    const d = await req("/login", { method: "POST", body: JSON.stringify({ email, password }) });
+    token = d.token; localStorage.setItem("token", token);
+    start();
+  } catch (e) { $("authErr").textContent = e.message; }
+};
+$("logout").onclick = () => { localStorage.removeItem("token"); token = null; clearInterval(poll); location.reload(); };
 
-            try {
-                const response = await fetch(`${API_URL}/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
-                });
+/* APP */
+function start() {
+  myId = Number(jwtId(token));
+  if (!myId) return $("logout").click();
+  $("auth").classList.add("hide"); $("app").classList.remove("hide");
+  $("me").textContent = "user #" + myId;
+  loadPosts(); loadUsers(); loadCategories();
+}
+function show(tab) {
+  $("homeView").classList.toggle("hide", tab !== "home");
+  $("chatView").classList.toggle("hide", tab !== "chat");
+  $("tHome").classList.toggle("on", tab === "home");
+  $("tChat").classList.toggle("on", tab === "chat");
+}
+$("tHome").onclick = () => show("home");
+$("tChat").onclick = () => show("chat");
 
-                const data = await response.json();
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-                if (response.ok) {
-                    divMensagem.style.color = 'green';
-                    divMensagem.innerText = 'Login efetuado com sucesso!';
-                    localStorage.setItem('token', data.token);
-                    setTimeout(() => {
-                        window.location.href = "chat.html";
-                    }, 300);
-                } else {
-                    divMensagem.style.color = 'red';
-                    divMensagem.innerText = data.error || 'Erro ao fazer login';
-                }
-            } catch (err) {
-                divMensagem.style.color = 'red';
-                divMensagem.innerText = 'Erro de conexão com o servidor';
-            }
-        });
+async function loadPosts() {
+  try {
+    const posts = await req("/getPosts");
+    $("posts").innerHTML = posts.length ? posts.map(p =>
+      `<div class="card post">${p.photo_url ? `<img src="${API}${esc(p.photo_url)}" alt="">` : ""}<h4>${esc(p.title)}</h4><div>${esc(p.content)}</div><div class="mut">por ${esc(p.author_name)} · ${esc(p.category_name)}</div></div>`).join("")
+      : '<div class="mut">Sem posts</div>';
+  } catch (e) { $("posts").textContent = e.message; }
+}
 
-        // Lógica de Cadastro (Ajuste a rota se usares "/register" ou "/users")
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const name = document.getElementById('regName').value;
-            const email = document.getElementById('regEmail').value;
-            const password = document.getElementById('regPassword').value;
-            const divMensagem = document.getElementById('mensagem');
+async function loadUsers() {
+  try {
+    const users = await req("/getUsers");
+    const meUser = users.find(u => u.ID === myId);
+    if (meUser) $("me").textContent = meUser.Name;
+    $("users").innerHTML = users.filter(u => u.ID !== myId).map(u =>
+      `<div class="u" data-id="${u.ID}" data-name="${esc(u.Name)}">${esc(u.Name)}<div class="mut">#${u.ID}</div></div>`).join("")
+      || '<div class="mut">Nenhum outro usuário. Cria mais um.</div>';
+    document.querySelectorAll(".u").forEach(el => el.onclick = () => openChat(Number(el.dataset.id), el.dataset.name, el));
+  } catch (e) { $("users").textContent = e.message; }
+}
 
-            try {
-                const response = await fetch(`${API_URL}/createUsers`, { // Altera para /register se a tua rota for essa
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, password })
-                });
+/* CHAT (polling a cada 3s, até o WebSocket existir) */
+function openChat(id, name, el) {
+  other = id;
+  document.querySelectorAll(".u").forEach(x => x.classList.remove("on")); el.classList.add("on");
+  $("chatHead").textContent = name;
+  $("send").classList.remove("hide");
+  loadChat(); clearInterval(poll); poll = setInterval(loadChat, 3000);
+}
+let lastSig = "";
+async function loadChat() {
+  if (!other) return;
+  try {
+    const msgs = await req("/api/chat/" + other);
+    const sig = msgs.map(m => m.id).join(",");
+    if (sig === lastSig) return;
+    lastSig = sig;
+    const box = $("msgs");
+    box.innerHTML = msgs.map(m => `<div class="m ${m.sender_id === myId ? "me" : ""}">${esc(m.content)}</div>`).join("");
+    box.scrollTop = box.scrollHeight;
+  } catch (e) { $("msgs").textContent = e.message; }
+}
+$("send").onsubmit = async e => {
+  e.preventDefault();
+  const content = $("text").value.trim();
+  if (!content || !other) return;
+  $("text").value = "";
+  try {
+    await req("/api/sendMessage", { method: "POST", body: JSON.stringify({ reciever_id: other, content }) });
+    lastSig = ""; loadChat();
+  } catch (err) { alert(err.message); }
+};
 
-                const data = await response.json();
+async function loadCategories() {
+  try {
+    const cats = await req("/getCategories");
+    $("pCat").innerHTML = cats.map(c => `<option value="${c.ID}">${esc(c.CategoryName)}</option>`).join("");
+  } catch (e) { /* ignora */ }
+}
+$("postForm").onsubmit = async e => {
+  e.preventDefault();
+  $("postErr").textContent = "";
+  const fd = new FormData();
+  fd.append("title", $("pTitle").value);
+  fd.append("content", $("pContent").value);
+  fd.append("category_id", $("pCat").value);
+  const f = $("pPhoto").files[0];
+  if (f) fd.append("photo", f);
+  try {
+    await req("/api/posts", { method: "POST", body: fd });
+    $("postForm").reset();
+    loadPosts();
+  } catch (err) { $("postErr").textContent = err.message; }
+};
 
-                if (response.ok) {
-                    divMensagem.style.color = 'green';
-                    divMensagem.innerText = 'Conta criada com sucesso! Faça login.';
-                    document.getElementById('registerForm').reset();
-                    setTimeout(() => switchTab('login'), 1000);
-                } else {
-                    divMensagem.style.color = 'red';
-                    divMensagem.innerText = data.error || 'Erro ao criar conta';
-                }
-            } catch (err) {
-                divMensagem.style.color = 'red';
-                divMensagem.innerText = 'Erro de conexão com o servidor';
-            }
-        });
-    </script>
-
+if (token) start();
+</script>
 </body>
 </html>
