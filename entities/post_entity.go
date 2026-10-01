@@ -13,4 +13,6 @@ type Post struct {
 	User       User     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"-"`
 	CategoryID uint     `gorm:"not null"`
 	Category   Category `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"-"`
+	GroupID    *uint    `gorm:"index"`
+	Group      *Group   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"-"`
 }

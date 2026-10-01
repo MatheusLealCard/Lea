@@ -40,6 +40,8 @@ func Connect() {
 		&entities.Role{},
 		&entities.Category{},
 		&entities.Message{},
+		&entities.Group{},
+		&entities.GroupMember{},
 	)
 
 	if err != nil {

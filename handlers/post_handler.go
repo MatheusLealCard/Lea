@@ -28,22 +28,29 @@ var allowedImages = map[string]string{
 }
 
 type PostDTO struct {
-	ID           uint      `json:"id"`
-	Title        string    `json:"title"`
-	Content      string    `json:"content"`
-	PhotoURL     string    `json:"photo_url"`
-	AuthorID     uint      `json:"author_id"`
-	AuthorName   string    `json:"author_name"`
-	CategoryName string    `json:"category_name"`
-	CreatedAt    time.Time `json:"created_at"`
+	ID              uint      `json:"id"`
+	Title           string    `json:"title"`
+	Content         string    `json:"content"`
+	PhotoURL        string    `json:"photo_url"`
+	AuthorID        uint      `json:"author_id"`
+	AuthorName      string    `json:"author_name"`
+	AuthorAvatarURL string    `json:"author_avatar_url"`
+	CategoryName    string    `json:"category_name"`
+	CreatedAt       time.Time `json:"created_at"`
 }
 
 func toPostDTO(p entities.Post) PostDTO {
-	url := ""
-	if p.Photo != "" {
-		url = "/uploads/" + p.Photo
+	return PostDTO{
+		ID:              p.ID,
+		Title:           p.Title,
+		Content:         p.Content,
+		PhotoURL:        uploadURL(p.Photo),
+		AuthorID:        p.UserID,
+		AuthorName:      p.User.Name,
+		AuthorAvatarURL: uploadURL(p.User.Avatar),
+		CategoryName:    p.Category.CategoryName,
+		CreatedAt:       p.CreatedAt,
 	}
-	return PostDTO{p.ID, p.Title, p.Content, url, p.UserID, p.User.Name, p.Category.CategoryName, p.CreatedAt}
 }
 
 // salva a foto (se veio) e devolve só o nome do arquivo
@@ -87,6 +94,7 @@ func savePhoto(c *fiber.Ctx) (string, error) {
 func GetPosts(c *fiber.Ctx) error {
 	var posts []entities.Post
 	err := database.DB.Preload("User").Preload("Category").
+		Where("group_id IS NULL"). // posts de grupo não entram no feed geral
 		Order("created_at desc, id desc").Find(&posts).Error
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -122,6 +130,25 @@ func CreatePost(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "categoria nao existe"})
 	}
 
+	// post dentro de grupo: só membro pode, e isso é checado ANTES de salvar a foto
+	var groupID *uint
+	if raw := strings.TrimSpace(c.FormValue("group_id")); raw != "" {
+		id, err := strconv.Atoi(raw)
+		if err != nil || id <= 0 {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "grupo invalido"})
+		}
+		var member int64
+		database.DB.Model(&entities.GroupMember{}).
+			Where("group_id = ? AND user_id = ?", id, userID).Count(&member)
+		if member == 0 {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+				"error": "so membros podem postar nesse grupo",
+			})
+		}
+		gid := uint(id)
+		groupID = &gid
+	}
+
 	photo, err := savePhoto(c)
 	if err != nil {
 		if fe, ok := err.(*fiber.Error); ok {
@@ -136,6 +163,7 @@ func CreatePost(c *fiber.Ctx) error {
 		Photo:      photo,
 		UserID:     userID,
 		CategoryID: uint(catID),
+		GroupID:    groupID,
 	}
 	if err := database.DB.Create(&post).Error; err != nil {
 		if photo != "" {
