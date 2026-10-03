@@ -36,11 +36,13 @@ type PostDTO struct {
 	AuthorName      string    `json:"author_name"`
 	AuthorAvatarURL string    `json:"author_avatar_url"`
 	CategoryName    string    `json:"category_name"`
+	GroupName       string    `json:"group_name,omitempty"`
+	CanDelete       bool      `json:"can_delete"`
 	CreatedAt       time.Time `json:"created_at"`
 }
 
 func toPostDTO(p entities.Post) PostDTO {
-	return PostDTO{
+	dto := PostDTO{
 		ID:              p.ID,
 		Title:           p.Title,
 		Content:         p.Content,
@@ -51,6 +53,32 @@ func toPostDTO(p entities.Post) PostDTO {
 		CategoryName:    p.Category.CategoryName,
 		CreatedAt:       p.CreatedAt,
 	}
+	if p.Group != nil {
+		dto.GroupName = p.Group.Name
+	}
+	return dto
+}
+
+func GetPost(c *fiber.Ctx) error {
+	viewerID, ok := c.Locals("user_id").(uint)
+	if !ok {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Não autorizado"})
+	}
+	id, err := c.ParamsInt("id")
+	if err != nil || id <= 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "id invalido"})
+	}
+
+	var post entities.Post
+	err = database.DB.Preload("User").Preload("Category").Preload("Group").First(&post, id).Error
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "post nao encontrado"})
+	}
+
+	dto := toPostDTO(post)
+	dto.CanDelete = post.UserID == viewerID ||
+		(post.Group != nil && post.Group.OwnerID == viewerID)
+	return c.JSON(dto)
 }
 
 // salva a foto (se veio) e devolve só o nome do arquivo

@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Lea - Teste</title>
 <style>
-:root{--bg:#f5f6fa;--card:#fff;--tx:#1d2330;--mut:#6b7385;--pri:#4f46e5;--bd:#e3e6ee;--me:#4f46e5;--other:#eceef5}
-@media (prefers-color-scheme:dark){:root{--bg:#12141b;--card:#1b1f2a;--tx:#e8eaf2;--mut:#8b93a7;--bd:#2a3040;--other:#262c3a}}
+:root{--bg:#f2f2f8;--card:#fff;--tx:#4b5073;--mut:#8a8fab;--pri:#6c7399;--bd:#e0e1ec;--me:#6c7399;--other:#e6e7f0}
+
 *{box-sizing:border-box}
 body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--tx)}
 .hide{display:none!important}
@@ -37,6 +37,18 @@ main{max-width:900px;margin:16px auto;padding:0 12px}
 .group{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:8px}
 #gPostForm{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
 #gPostForm textarea{min-height:80px;resize:vertical}
+.share{float:right;padding:4px 10px;font-size:13px;margin-left:8px}
+.shared{background:rgba(127,127,127,.18);border-radius:10px;padding:8px;margin-bottom:4px;max-width:260px}
+.shared img{width:100%;border-radius:8px;display:block;margin-bottom:6px}
+.m.me .shared .mut{color:inherit;opacity:.8}
+.clickable{cursor:pointer}
+.post.clickable:hover{border-color:var(--pri)}
+.detail img{width:100%;max-height:560px;object-fit:contain;border-radius:10px;margin:12px 0;display:block}
+.detail h2{margin:10px 0}
+.detail .body{white-space:pre-wrap;line-height:1.55;word-break:break-word}
+.comment{margin-top:8px}
+.comment .body{white-space:pre-wrap;word-break:break-word}
+#commentForm button{align-self:flex-start}
 .post h4{margin:0 0 4px}
 .mut{color:var(--mut);font-size:13px}
 #chatView{display:grid;grid-template-columns:220px 1fr;gap:12px;height:70vh}
@@ -50,16 +62,88 @@ main{max-width:900px;margin:16px auto;padding:0 12px}
 .m.me{background:var(--me);color:#fff;align-self:flex-end}
 #send{display:flex;gap:8px;padding:10px;border-top:1px solid var(--bd)}
 #send input{flex:1}
+body{background:#d9dbe6}
+#auth,#app{max-width:430px;margin:0 auto;background:var(--bg);min-height:100vh}
+#auth{padding:48px 28px;border:0;border-radius:0;gap:12px}
+.logo{width:64px;height:64px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto}
+.brand{font-size:34px;font-weight:800;text-align:center;letter-spacing:1px}
+#authTitle{text-align:center;font-size:15px;color:var(--mut);font-weight:500;margin:0}
+.pw{position:relative}.pw input{width:100%}
+.eye{position:absolute;right:4px;top:3px;background:none;color:var(--mut);padding:7px}
+header{position:sticky;top:0;z-index:5}
+header>div:last-child{display:flex;justify-content:space-between;align-items:center;width:100%}
+#me{display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600}
+header .tabs{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:#a9adbd;justify-content:space-around;padding:8px 4px;gap:0;z-index:10}
+.tabs button{background:none;color:#fff;font-size:11px;padding:4px 8px;display:flex;flex-direction:column;align-items:center;opacity:.75}
+.tabs button.on{background:none;opacity:1;font-weight:700}
+.tabs button::before{font-size:20px}
+#tHome{order:1}#tHome::before{content:"🏠"}
+#tGroups{order:2}#tGroups::before{content:"👥"}
+#tPost{order:3}#tPost::before{content:"➕"}
+#tChat{order:4}#tChat::before{content:"✉️"}
+#tProfile{order:5}#tProfile::before{content:"👤"}
+main{padding:0 14px 96px;margin:12px auto}
+#search{width:100%;margin-bottom:6px}
+#count{font-size:12px;color:var(--mut);margin-bottom:12px}
+.post{display:flex;flex-direction:column;border:0;background:transparent;padding:0;margin-bottom:18px}
+.post h4{order:-1;margin:0 0 8px;font-size:15px}
+.post img{width:100%;max-height:none;border-radius:10px}
+.post>div:not(.mut),.post .share{display:none}
+.detail{display:flex;flex-direction:column}
+.detail h2{order:-3}.detail>img{order:-2}.detail .body{order:-1;font-size:14px}
+.detail>.row{margin-top:14px;flex-wrap:wrap}
+body.compose #posts,body.compose #feedTop{display:none}
+body:not(.compose) #postForm{display:none}
+#chatView{grid-template-columns:1fr!important;height:auto!important}
+#users{max-height:150px!important}
+#msgs{height:55vh!important}
+#tGroups{display:none}
+.u,.gr{padding:10px;border-radius:10px;cursor:pointer}
+.gr:hover{background:var(--other)}
+.u b,.gr b{font-size:16px}
+#usersCard{padding:12px;max-height:320px;overflow:auto}
+#users{max-height:none!important;overflow:visible;padding:0}
+#myProfile{background:transparent;border:0;text-align:center;padding:8px 0}
+#myProfile .row{flex-direction:column;gap:10px}
+#myProfile .avatar.lg{width:120px;height:120px;font-size:48px}
+#myProfile h3{font-size:26px}
+#myProfile .mut{display:none}
+#myProfile .stats{justify-content:center}
+#profileView>label{display:block;text-align:center}
+.mi{padding:14px 4px;border-bottom:1px solid var(--bd);font-size:17px;font-weight:600;cursor:pointer}
+.mi.off{opacity:.55;cursor:default;display:flex;justify-content:space-between}
+.mi.off span{font-size:12px;font-weight:400}
+#infoBox{padding:8px 4px}
+@media(min-width:801px){
+body{background:var(--bg)}
+#auth{margin:8vh auto;border:1px solid var(--bd);border-radius:16px;background:var(--card);min-height:0}
+#app{max-width:none;margin:0}
+header{position:fixed;left:0;top:0;bottom:0;width:230px;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:16px;padding:20px 14px;border-right:1px solid var(--bd);border-bottom:0}
+header::before{content:"LÊA";order:-2;font-weight:800;font-size:26px;letter-spacing:1px;padding:0 12px}
+header>div:last-child{order:-1}
+header .tabs{position:static;transform:none;width:auto;max-width:none;background:none;flex-direction:column;align-items:stretch;gap:4px;padding:0}
+.tabs button{flex-direction:row;gap:12px;font-size:15px;color:var(--tx);opacity:1;padding:10px 12px;border-radius:10px;justify-content:flex-start}
+.tabs button.on{background:var(--other)}
+main{margin:0 0 0 230px;max-width:none;padding:28px 32px 48px}
+main>section{max-width:720px;margin:0 auto}
+main>#chatView{max-width:1000px}
+#chatView{grid-template-columns:320px 1fr!important;height:75vh!important}
+#usersCard{max-height:none}
+#msgs{height:auto!important}
+.post img{max-height:520px;object-fit:cover}
+}
 @media(max-width:640px){#chatView{grid-template-columns:1fr;height:auto}#users{max-height:140px}#msgs{height:50vh}}
 </style>
 </head>
 <body>
 
 <div id="auth" class="card">
+  <div class="logo">🚩</div>
+  <div class="brand">LÊA</div>
   <h2 id="authTitle">Entrar</h2>
   <input id="name" placeholder="Nome" class="hide">
   <input id="email" type="email" placeholder="Email">
-  <input id="pass" type="password" placeholder="Senha">
+  <div class="pw"><input id="pass" type="password" placeholder="Senha"><button type="button" class="eye" id="eye">👁</button></div>
   <div class="err" id="authErr"></div>
   <button id="authBtn">Entrar</button>
   <button class="ghost" id="toggle">Criar conta</button>
@@ -69,9 +153,10 @@ main{max-width:900px;margin:16px auto;padding:0 12px}
   <header>
     <div class="tabs">
       <button id="tHome" class="on">Home</button>
-      <button id="tChat">Chat</button>
+      <button id="tChat">Mensagens</button>
       <button id="tProfile">Perfil</button>
       <button id="tGroups">Grupos</button>
+      <button id="tPost">Post</button>
     </div>
     <div><span id="me" class="mut"></span> <button class="ghost" id="logout">Sair</button></div>
   </header>
@@ -86,10 +171,14 @@ main{max-width:900px;margin:16px auto;padding:0 12px}
         <div class="err" id="postErr"></div>
         <button>Publicar</button>
       </form>
-      <h3>Posts</h3><div id="posts"></div>
+      <div id="feedTop"><input id="search" placeholder="Buscar posts..."><div id="count"></div></div><div id="posts"></div>
     </section>
     <section id="chatView" class="hide">
-      <div id="users" class="card"></div>
+      <div id="usersCard" class="card">
+        <div class="row" style="justify-content:space-between;margin-bottom:8px"><h3 style="margin:0">Mensagens e Grupos</h3><button class="ghost" id="manageGroups">+ Grupo</button></div>
+        <div id="groupRows"></div>
+        <div id="users"></div>
+      </div>
       <div id="chatBox" class="card">
         <div id="chatHead">Escolhe alguém pra conversar</div>
         <div id="msgs"></div>
@@ -104,6 +193,13 @@ main{max-width:900px;margin:16px auto;padding:0 12px}
       <label class="mut" style="display:block;margin-top:8px">Trocar foto de perfil
         <input id="avatarInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
       </label>
+      <div id="profMenu" style="margin:16px 0">
+        <div class="mi" id="miInfo">👤 Informações</div>
+        <div id="infoBox" class="mut hide"></div>
+        <div class="mi off">🔔 Notificações <span>em breve</span></div>
+        <div class="mi off">♡ Salvos <span>em breve</span></div>
+        <div class="mi off">⚙ Configurações <span>em breve</span></div>
+      </div>
       <h3>Pessoas</h3>
       <div id="people"></div>
     </section>
@@ -125,6 +221,10 @@ main{max-width:900px;margin:16px auto;padding:0 12px}
           <h3 id="gdName" style="margin:0"></h3>
           <div id="gdDesc"></div>
           <div class="mut" id="gdMeta"></div>
+          <div class="row" style="margin-top:10px">
+            <button class="ghost hide" id="gdLeave">Sair do grupo</button>
+            <button class="ghost hide" id="gdDelete">Excluir grupo</button>
+          </div>
         </div>
         <form id="gPostForm" class="card">
           <strong>Novo post no grupo</strong>
@@ -139,8 +239,29 @@ main{max-width:900px;margin:16px auto;padding:0 12px}
         <div id="gPosts"></div>
       </div>
     </section>
+  <section id="postView" class="hide">
+      <button class="ghost" id="pvBack">← Voltar</button>
+      <div id="postDetail" style="margin-top:10px"></div>
+      <div id="commentsBox" style="margin-top:14px">
+        <h3 id="cTitle" style="margin:0 0 8px">Comentários</h3>
+        <form id="commentForm" class="row">
+          <textarea id="cText" placeholder="Escreva um comentário..." maxlength="1000" required style="flex:1;min-height:44px;resize:vertical"></textarea>
+          <button>Comentar</button>
+        </form>
+        <div class="err" id="cErr"></div>
+        <div id="comments"></div>
+      </div>
+    </section>
   </main>
 </div>
+
+<dialog id="shareDlg" class="card" style="max-width:380px;width:90%;color:var(--tx)">
+  <strong>Compartilhar post</strong>
+  <input id="shareMsg" placeholder="Mensagem (opcional)" style="width:100%;margin:10px 0">
+  <div id="shareUsers"></div>
+  <div class="err" id="shareErr"></div>
+  <button class="ghost" id="shareClose" style="margin-top:10px">Fechar</button>
+</dialog>
 
 <script>
 const API = "http://localhost:3000";
@@ -189,20 +310,24 @@ function start() {
   if (!myId) return $("logout").click();
   $("auth").classList.add("hide"); $("app").classList.remove("hide");
   $("me").textContent = "user #" + myId;
-  loadPosts(); loadUsers(); loadCategories();
+  loadPosts(); loadUsers(); loadCategories(); openFromHash();
 }
 function show(tab) {
   $("homeView").classList.toggle("hide", tab !== "home");
   $("chatView").classList.toggle("hide", tab !== "chat");
   $("tHome").classList.toggle("on", tab === "home");
-  $("tChat").classList.toggle("on", tab === "chat");
+  $("tChat").classList.toggle("on", tab === "chat" || tab === "groups");
   $("profileView").classList.toggle("hide", tab !== "profile");
   $("tProfile").classList.toggle("on", tab === "profile");
   $("groupsView").classList.toggle("hide", tab !== "groups");
   $("tGroups").classList.toggle("on", tab === "groups");
+  $("postView").classList.toggle("hide", tab !== "post");
+  if (tab !== "post") curTab = tab;
+  document.body.classList.remove("compose");
+  $("tPost").classList.remove("on");
 }
 $("tHome").onclick = () => show("home");
-$("tChat").onclick = () => show("chat");
+$("tChat").onclick = () => { show("chat"); loadGroupRows(); loadUsers(); };
 $("tProfile").onclick = () => { show("profile"); loadProfile(); };
 $("tGroups").onclick = () => { show("groups"); loadGroups(); };
 
@@ -210,9 +335,12 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": 
 
 async function loadPosts() {
   try {
-    const posts = await req("/getPosts");
+    allPosts = await req("/getPosts");
+    const q = ($("search").value || "").trim().toLowerCase();
+    const posts = q ? allPosts.filter(p => (p.title + " " + p.content + " " + p.author_name).toLowerCase().includes(q)) : allPosts;
+    $("count").textContent = posts.length + " resultado" + (posts.length === 1 ? "" : "s");
     $("posts").innerHTML = posts.length ? posts.map(p =>
-      `<div class="card post">${p.photo_url ? `<img src="${API}${esc(p.photo_url)}" alt="">` : ""}<h4>${esc(p.title)}</h4><div>${esc(p.content)}</div><div class="mut row" style="gap:6px">${av(p.author_avatar_url, p.author_name, "sm")}por ${esc(p.author_name)} · ${esc(p.category_name)}</div></div>`).join("")
+      `<div class="card post clickable" data-post="${p.id}">${p.photo_url ? `<img src="${API}${esc(p.photo_url)}" alt="">` : ""}<button class="ghost share" data-share="${p.id}">↗ Compartilhar</button><h4>${esc(p.title)}</h4><div>${esc(p.content)}</div><div class="mut row" style="gap:6px">${av(p.author_avatar_url, p.author_name, "sm")}por ${esc(p.author_name)} · ${esc(p.category_name)}</div></div>`).join("")
       : '<div class="mut">Sem posts</div>';
   } catch (e) { $("posts").textContent = e.message; }
 }
@@ -221,9 +349,9 @@ async function loadUsers() {
   try {
     const users = await req("/getUsers");
     const meUser = users.find(u => u.ID === myId);
-    if (meUser) $("me").textContent = meUser.Name;
+    if (meUser) $("me").innerHTML = av(meUser.Avatar ? "/uploads/" + meUser.Avatar : "", meUser.Name, "sm") + esc(meUser.Name);
     $("users").innerHTML = users.filter(u => u.ID !== myId).map(u =>
-      `<div class="u" data-id="${u.ID}" data-name="${esc(u.Name)}">${esc(u.Name)}<div class="mut">#${u.ID}</div></div>`).join("")
+      `<div class="u row" data-id="${u.ID}" data-name="${esc(u.Name)}">${av(u.Avatar ? "/uploads/" + u.Avatar : "", u.Name, "")}<div><b>${esc(u.Name)}</b><div class="mut">Mensagem direta</div></div></div>`).join("")
       || '<div class="mut">Nenhum outro usuário. Cria mais um.</div>';
     document.querySelectorAll(".u").forEach(el => el.onclick = () => openChat(Number(el.dataset.id), el.dataset.name, el));
   } catch (e) { $("users").textContent = e.message; }
@@ -246,7 +374,7 @@ async function loadChat() {
     if (sig === lastSig) return;
     lastSig = sig;
     const box = $("msgs");
-    box.innerHTML = msgs.map(m => `<div class="m ${m.sender_id === myId ? "me" : ""}">${esc(m.content)}</div>`).join("");
+    box.innerHTML = msgs.map(m => `<div class="m ${m.sender_id === myId ? "me" : ""}">${m.post ? sharedCard(m.post) : ""}${esc(m.content)}</div>`).join("");
     box.scrollTop = box.scrollHeight;
   } catch (e) { $("msgs").textContent = e.message; }
 }
@@ -283,6 +411,7 @@ async function loadProfile() {
     const users = await req("/getUsers");
     const profiles = await Promise.all(users.map(u => req("/api/users/" + u.ID + "/profile")));
     const mine = profiles.find(p => p.is_me);
+    meEmail = mine ? mine.email : "";
     $("myProfile").innerHTML = mine
       ? `<div class="row">${av(mine.avatar_url, mine.name, "lg")}<div><h3 style="margin:0">${esc(mine.name)}</h3><div class="mut">${esc(mine.email)}</div></div></div><div class="stats"><div><b>${mine.followers}</b> seguidores</div><div><b>${mine.following}</b> seguindo</div></div>`
       : "";
@@ -304,10 +433,11 @@ async function loadGroups() {
     const gs = await req("/api/groups");
     groupsCache = Object.fromEntries(gs.map(g => [g.id, g]));
     $("groups").innerHTML = gs.map(g =>
-      `<div class="card group"><div><b>${esc(g.name)}</b>${g.is_owner ? ' <span class="mut">(dono)</span>' : ""}<div>${esc(g.description)}</div><div class="mut">${g.members} membros · criado por ${esc(g.owner_name)}</div></div><div class="row"><button class="ghost" data-open="${g.id}">Abrir</button>${g.is_owner ? "" : `<button class="${g.is_member ? "ghost" : ""}" data-id="${g.id}" data-m="${g.is_member}">${g.is_member ? "Sair" : "Entrar"}</button>`}</div></div>`).join("")
+      `<div class="card group"><div><b>${esc(g.name)}</b>${g.is_owner ? ' <span class="mut">(dono)</span>' : ""}<div>${esc(g.description)}</div><div class="mut">${g.members} membros · criado por ${esc(g.owner_name)}</div></div><div class="row"><button class="ghost" data-open="${g.id}">Abrir</button>${g.is_owner ? `<button class="ghost" data-del="${g.id}">Excluir grupo</button>` : `<button class="${g.is_member ? "ghost" : ""}" data-id="${g.id}" data-m="${g.is_member}">${g.is_member ? "Sair" : "Entrar"}</button>`}</div></div>`).join("")
       || '<div class="mut">Nenhum grupo ainda. Cria o primeiro!</div>';
     document.querySelectorAll("#groups button[data-m]").forEach(b => b.onclick = () => toggleGroup(b.dataset.id, b.dataset.m === "true"));
     document.querySelectorAll("#groups button[data-open]").forEach(b => b.onclick = () => openGroup(Number(b.dataset.open)));
+    document.querySelectorAll("#groups button[data-del]").forEach(b => b.onclick = () => removeGroup(Number(b.dataset.del), groupsCache[b.dataset.del].name));
   } catch (e) { $("groups").textContent = e.message; }
 }
 async function toggleGroup(id, member) {
@@ -329,7 +459,7 @@ $("groupForm").onsubmit = async e => {
 let groupsCache = {}, currentGroup = null;
 
 function postCard(p) {
-  return `<div class="card post">${p.photo_url ? `<img src="${API}${esc(p.photo_url)}" alt="">` : ""}<h4>${esc(p.title)}</h4><div>${esc(p.content)}</div><div class="mut row" style="gap:6px">${av(p.author_avatar_url, p.author_name, "sm")}por ${esc(p.author_name)} · ${esc(p.category_name)}</div></div>`;
+  return `<div class="card post clickable" data-post="${p.id}">${p.photo_url ? `<img src="${API}${esc(p.photo_url)}" alt="">` : ""}<button class="ghost share" data-share="${p.id}">↗ Compartilhar</button><h4>${esc(p.title)}</h4><div>${esc(p.content)}</div><div class="mut row" style="gap:6px">${av(p.author_avatar_url, p.author_name, "sm")}por ${esc(p.author_name)} · ${esc(p.category_name)}</div></div>`;
 }
 function openGroup(id) {
   currentGroup = groupsCache[id];
@@ -341,6 +471,8 @@ function openGroup(id) {
   $("gdMeta").textContent = currentGroup.members + " membros · criado por " + currentGroup.owner_name;
   $("gPostForm").classList.toggle("hide", !currentGroup.is_member);
   $("gMemberHint").classList.toggle("hide", currentGroup.is_member);
+  $("gdLeave").classList.toggle("hide", !(currentGroup.is_member && !currentGroup.is_owner));
+  $("gdDelete").classList.toggle("hide", !currentGroup.is_owner);
   $("gpCat").innerHTML = $("pCat").innerHTML;
   loadGroupPosts();
 }
@@ -373,6 +505,160 @@ $("gPostForm").onsubmit = async e => {
   } catch (err) { $("gpErr").textContent = err.message; }
 };
 
+function sharedCard(p) {
+  return `<div class="shared clickable" data-post="${p.id}">${p.photo_url ? `<img src="${API}${esc(p.photo_url)}" alt="">` : ""}<b>${esc(p.title)}</b><div>${esc(p.snippet)}</div><div class="mut">por ${esc(p.author_name)}</div></div>`;
+}
+
+let sharePostId = null;
+async function openShare(postId) {
+  sharePostId = postId;
+  $("shareErr").textContent = "";
+  $("shareMsg").value = "";
+  $("shareDlg").showModal();
+  try {
+    const users = await req("/getUsers");
+    $("shareUsers").innerHTML = users.filter(u => u.ID !== myId).map(u =>
+      `<div class="card person"><div class="row">${av(u.Avatar ? "/uploads/" + u.Avatar : "", u.Name, "sm")}<b>${esc(u.Name)}</b></div><button data-to="${u.ID}">Enviar</button></div>`).join("")
+      || '<div class="mut">Nenhum outro usuário.</div>';
+    document.querySelectorAll("#shareUsers button").forEach(b => b.onclick = () => sendShare(Number(b.dataset.to), b));
+  } catch (e) { $("shareErr").textContent = e.message; }
+}
+async function sendShare(toId, btn) {
+  $("shareErr").textContent = "";
+  try {
+    await req("/api/sendMessage", { method: "POST", body: JSON.stringify({ reciever_id: toId, post_id: sharePostId, content: $("shareMsg").value.trim() }) });
+    btn.textContent = "Enviado ✓";
+    btn.disabled = true;
+  } catch (e) { $("shareErr").textContent = e.message; }
+}
+$("shareClose").onclick = () => $("shareDlg").close();
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-share]");
+  if (b) openShare(Number(b.dataset.share));
+});
+
+let curTab = "home", backTab = "home";
+
+function renderPost(p) {
+  return `<div class="card detail">
+    <div class="row">${av(p.author_avatar_url, p.author_name, "")}<div><b>${esc(p.author_name)}</b><div class="mut">${esc(p.category_name)} · ${new Date(p.created_at).toLocaleString("pt-BR")}</div></div>
+      <button class="ghost share" style="margin-left:auto" data-share="${p.id}">↗ Compartilhar</button>${p.author_id !== myId ? `<button class="ghost share" data-msg="${p.author_id}" data-name="${esc(p.author_name)}">✉ Enviar mensagem</button>` : ""}${p.can_delete ? `<button class="ghost share" data-delpost="${p.id}">Excluir</button>` : ""}</div>
+    ${p.photo_url ? `<img src="${API}${esc(p.photo_url)}" alt="">` : ""}
+    <h2>${esc(p.title)}</h2>
+    <div class="body">${esc(p.content)}</div>
+    ${p.group_name ? `<div class="mut" style="margin-top:12px">Publicado no grupo <b>${esc(p.group_name)}</b></div>` : ""}
+  </div>`;
+}
+async function openPost(id) {
+  try {
+    const p = await req("/api/posts/" + id);
+    backTab = curTab;
+    $("postDetail").innerHTML = renderPost(p);
+    currentPostId = id;
+    $("cText").value = "";
+    $("cErr").textContent = "";
+    loadComments();
+    show("post");
+    history.replaceState(null, "", "#post=" + id);
+    window.scrollTo(0, 0);
+  } catch (e) { alert(e.message); }
+}
+function openFromHash() {
+  const m = location.hash.match(/^#post=(\d+)$/);
+  if (m && token) openPost(Number(m[1]));
+}
+$("pvBack").onclick = () => {
+  history.replaceState(null, "", location.pathname + location.search);
+  show(backTab);
+};
+window.addEventListener("hashchange", openFromHash);
+// clicar no card abre o post (ignora cliques em botões, ex: Compartilhar)
+document.addEventListener("click", e => {
+  if (e.target.closest("button, a, input, select, textarea")) return;
+  const card = e.target.closest("[data-post]");
+  if (card) openPost(Number(card.dataset.post));
+});
+
+let currentPostId = null;
+
+function commentCard(c) {
+  return `<div class="card comment"><div class="row" style="align-items:flex-start">${av(c.author_avatar_url, c.author_name, "sm")}<div style="flex:1;min-width:0"><b>${esc(c.author_name)}</b> <span class="mut">${new Date(c.created_at).toLocaleString("pt-BR")}</span><div class="body">${esc(c.content)}</div></div>${c.can_delete ? `<button class="ghost" data-delc="${c.id}">Excluir</button>` : ""}</div></div>`;
+}
+async function loadComments() {
+  if (!currentPostId) return;
+  try {
+    const cs = await req("/api/posts/" + currentPostId + "/comments");
+    $("cTitle").textContent = "Comentários (" + cs.length + ")";
+    $("comments").innerHTML = cs.map(commentCard).join("") || '<div class="mut">Seja o primeiro a comentar.</div>';
+    document.querySelectorAll("#comments [data-delc]").forEach(b => b.onclick = () => deleteComment(Number(b.dataset.delc)));
+  } catch (e) { $("comments").textContent = e.message; }
+}
+$("commentForm").onsubmit = async e => {
+  e.preventDefault();
+  $("cErr").textContent = "";
+  const content = $("cText").value.trim();
+  if (!content) return;
+  try {
+    await req("/api/posts/" + currentPostId + "/comments", { method: "POST", body: JSON.stringify({ content }) });
+    $("cText").value = "";
+    loadComments();
+  } catch (err) { $("cErr").textContent = err.message; }
+};
+async function deleteComment(id) {
+  if (!confirm("Excluir este comentário?")) return;
+  try {
+    await req("/api/comments/" + id, { method: "DELETE" });
+    loadComments();
+  } catch (e) { alert(e.message); }
+}
+
+async function removeGroup(id, name) {
+  if (!confirm(`Excluir o grupo "${name}"? Todos os posts e comentários dele serão apagados. Isso não pode ser desfeito.`)) return;
+  try {
+    await req("/api/groups/" + id, { method: "DELETE" });
+  } catch (e) { return alert(e.message); }
+  if (currentGroup && currentGroup.id === id) $("gBack").click(); else loadGroups();
+}
+$("gdDelete").onclick = () => removeGroup(currentGroup.id, currentGroup.name);
+$("gdLeave").onclick = async () => {
+  try {
+    await req("/api/groups/" + currentGroup.id + "/join", { method: "DELETE" });
+    $("gBack").click();
+  } catch (e) { alert(e.message); }
+};
+
+async function removePost(id) {
+  if (!confirm("Excluir este post? Os comentários dele também serão apagados.")) return;
+  try {
+    await req("/api/posts/" + id, { method: "DELETE" });
+    history.replaceState(null, "", location.pathname + location.search);
+    show(backTab);
+    loadPosts();
+    if (currentGroup) loadGroupPosts();
+  } catch (e) { alert(e.message); }
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-delpost]");
+  if (b) removePost(Number(b.dataset.delpost));
+});
+
+let allPosts = [], searchTimer = null;
+$("search").oninput = () => { clearTimeout(searchTimer); searchTimer = setTimeout(loadPosts, 250); };
+$("tPost").onclick = () => {
+  show("home");
+  $("tHome").classList.remove("on");
+  $("tPost").classList.add("on");
+  document.body.classList.add("compose");
+};
+$("eye").onclick = () => { const i = $("pass"); i.type = i.type === "password" ? "text" : "password"; };
+$("me").onclick = () => $("tProfile").click();
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-msg]");
+  if (!b) return;
+  show("chat");
+  openChat(Number(b.dataset.msg), b.dataset.name, document.querySelector(`.u[data-id="${b.dataset.msg}"]`) || document.createElement("div"));
+});
+
 async function loadCategories() {
   try {
     const cats = await req("/getCategories");
@@ -391,6 +677,7 @@ $("postForm").onsubmit = async e => {
   try {
     await req("/api/posts", { method: "POST", body: fd });
     $("postForm").reset();
+    show("home");
     loadPosts();
   } catch (err) { $("postErr").textContent = err.message; }
 };
