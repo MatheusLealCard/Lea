@@ -42,6 +42,7 @@ func Connect() {
 		&entities.Message{},
 		&entities.Group{},
 		&entities.GroupMember{},
+		&entities.Comment{},
 	)
 
 	if err != nil {

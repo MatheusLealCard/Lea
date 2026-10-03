@@ -101,6 +101,12 @@ func main() {
 	api.Post("/groups/:id/join", handlers.JoinGroup)
 	api.Delete("/groups/:id/join", handlers.LeaveGroup)
 	api.Get("/groups/:id/posts", handlers.GetGroupPosts)
+	api.Get("/posts/:id", handlers.GetPost)
+	api.Get("/posts/:id/comments", handlers.GetComments)
+	api.Post("/posts/:id/comments", handlers.CreateComment)
+	api.Delete("/comments/:id", handlers.DeleteComment)
+	api.Delete("/groups/:id", handlers.DeleteGroup)
+	api.Delete("/posts/:id", handlers.DeletePost)
 
 	log.Println("Server running")
 	log.Fatal(app.Listen(":3000"))
