@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/joho/godotenv"
@@ -86,6 +87,10 @@ func main() {
 	app.Get("/users/:id/followers", handlers.GetUserFolowers)
 	app.Get("/getRoles", handlers.GetRoles)
 	app.Get("/getCategories", handlers.GetCategories)
+
+	// WebSocket do chat
+	app.Use("/ws", middlewares.WSProtected())
+	app.Get("/ws", websocket.New(handlers.ChatWS))
 
 	// protegidas
 	api := app.Group("/api", middlewares.Protected())
