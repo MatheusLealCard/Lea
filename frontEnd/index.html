@@ -310,7 +310,7 @@ function start() {
   if (!myId) return $("logout").click();
   $("auth").classList.add("hide"); $("app").classList.remove("hide");
   $("me").textContent = "user #" + myId;
-  loadPosts(); loadUsers(); loadCategories(); openFromHash();
+  loadPosts(); loadUsers(); loadCategories(); openFromHash(); connectWS();
 }
 function show(tab) {
   $("homeView").classList.toggle("hide", tab !== "home");
@@ -327,7 +327,7 @@ function show(tab) {
   $("tPost").classList.remove("on");
 }
 $("tHome").onclick = () => show("home");
-$("tChat").onclick = () => { show("chat"); loadGroupRows(); loadUsers(); };
+$("tChat").onclick = () => { show("chat"); setUnread(0); loadGroupRows(); loadUsers(); };
 $("tProfile").onclick = () => { show("profile"); loadProfile(); };
 $("tGroups").onclick = () => { show("groups"); loadGroups(); };
 
@@ -363,7 +363,7 @@ function openChat(id, name, el) {
   document.querySelectorAll(".u").forEach(x => x.classList.remove("on")); el.classList.add("on");
   $("chatHead").textContent = name;
   $("send").classList.remove("hide");
-  loadChat(); clearInterval(poll); poll = setInterval(loadChat, 3000);
+  loadChat(); clearInterval(poll); poll = setInterval(loadChat, 20000);
 }
 let lastSig = "";
 async function loadChat() {
@@ -658,6 +658,46 @@ document.addEventListener("click", e => {
   show("chat");
   openChat(Number(b.dataset.msg), b.dataset.name, document.querySelector(`.u[data-id="${b.dataset.msg}"]`) || document.createElement("div"));
 });
+
+let meEmail = "", ws = null, wsRetry = 0, unread = 0;
+
+async function loadGroupRows() {
+  try {
+    const gs = await req("/api/groups");
+    groupsCache = Object.fromEntries(gs.map(g => [g.id, g]));
+    $("groupRows").innerHTML = gs.map(g =>
+      `<div class="gr row" data-gid="${g.id}"><span class="avatar">👥</span><div><b>${esc(g.name)}</b><div class="mut">${g.members} membros${g.is_member ? " · você participa" : ""}</div></div></div>`).join("");
+    document.querySelectorAll("#groupRows .gr").forEach(el => el.onclick = () => { show("groups"); openGroup(Number(el.dataset.gid)); });
+  } catch (e) { /* ignora */ }
+}
+$("manageGroups").onclick = () => {
+  show("groups");
+  $("groupDetail").classList.add("hide");
+  $("groupsList").classList.remove("hide");
+  loadGroups();
+};
+$("miInfo").onclick = () => {
+  $("infoBox").textContent = "Email: " + meEmail;
+  $("infoBox").classList.toggle("hide");
+};
+
+// ---- tempo real (WebSocket) ----
+function setUnread(n) {
+  unread = n;
+  $("tChat").textContent = n ? "Mensagens (" + n + ")" : "Mensagens";
+}
+function onIncoming(m) {
+  const inOpenChat = other && (m.sender_id === other || (m.sender_id === myId && m.reciever_id === other));
+  if (inOpenChat && curTab === "chat") { loadChat(); return; }
+  if (m.sender_id !== myId) setUnread(unread + 1);
+}
+function connectWS() {
+  if (!token) return;
+  ws = new WebSocket(API.replace(/^http/, "ws") + "/ws?token=" + encodeURIComponent(token));
+  ws.onopen = () => { wsRetry = 0; };
+  ws.onmessage = ev => { try { onIncoming(JSON.parse(ev.data)); } catch (e) { /* ignora */ } };
+  ws.onclose = () => { if (token) setTimeout(connectWS, Math.min(1000 * 2 ** wsRetry++, 15000)); };
+}
 
 async function loadCategories() {
   try {

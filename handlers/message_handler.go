@@ -122,6 +122,7 @@ func CreateMessage(c *fiber.Ctx) error {
 		pipe.LTrim(ctx, key, 0, chatCacheSize-1)
 		pipe.Expire(ctx, key, chatCacheTTL)
 		pipe.Publish(ctx, database.UserChannel(input.RecieverID), payload)
+		pipe.Publish(ctx, database.UserChannel(userID), payload)
 		pipe.Exec(ctx) // falha no Redis não derruba o envio
 	}
 
